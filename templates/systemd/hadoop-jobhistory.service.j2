@@ -1,0 +1,17 @@
+[Unit]
+Description=hadoop jobhistory service
+After=network.target
+
+[Service]
+User={{hadoop_user}}
+Group={{hadoop_user}}
+Type=forking
+Environment=JAVA_HOME={{java_home}}
+Environment=HADOOP_HOME={{hadoop_home}}
+ExecStart=/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh start historyserver
+ExecStop=/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh stop historyserver
+PIDFile=/var/run/hadoop/hadoop-jobhistory.pid
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

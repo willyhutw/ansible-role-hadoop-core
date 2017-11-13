@@ -1,0 +1,18 @@
+hadoop_user: hduser
+
+java_home: /usr/lib/jvm/java-8-openjdk-amd64
+hadoop_home: /usr/local/hadoop
+
+fs_defaultFS_address: 127.0.0.1
+fs_defaultFS_port: 9000
+
+dfs_secondary_http_address: 127.0.0.1
+dfs_secondary_http_port: 50090
+
+mapreduce_framework_name: yarn
+yarn_resourcemanager_hostname: 127.0.0.1
+yarn_nodemanager_aux_services: mapreduce_shuffle
+
+hadoop_slaves:
+ - 127.0.0.1
+ 

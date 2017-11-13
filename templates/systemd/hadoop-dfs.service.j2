@@ -1,0 +1,17 @@
+[Unit]
+Description=hadoop dfs service
+After=network.target
+
+[Service]
+User={{hadoop_user}}
+Group={{hadoop_user}}
+Type=forking
+Environment=JAVA_HOME={{java_home}}
+Environment=HADOOP_HOME={{hadoop_home}}
+ExecStart=/usr/local/hadoop/sbin/start-dfs.sh
+ExecStop=/usr/local/hadoop/sbin/stop-dfs.sh
+PIDFile=/var/run/hadoop/hadoop-dfs.pid
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

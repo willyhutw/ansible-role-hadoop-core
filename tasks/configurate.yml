@@ -1,0 +1,82 @@
+---
+
+
+- name: (configurate) | add hadoop user
+  user:
+    name: "{{hadoop_user}}"
+    state: present
+    generate_ssh_key: yes
+
+
+- name: (configurate) | fetch public ssh keys
+  become_user: hduser
+  shell: cat ~/.ssh/id_rsa.pub
+  register: ssh_keys
+
+
+- name: (configurate) | check keys
+  debug: msg="{{ssh_keys.stdout}}"
+
+
+- name: (configurate) | deploy keys on all slave servers
+  authorized_key:
+    user: "{{hadoop_user}}"
+    key: "{{ssh_keys.stdout}}"
+    with_items:
+      - "{{group['all']}}"
+
+
+- name: (configurate) | chown to hduser
+  shell: chown -R hduser:hduser /usr/local/hadoop
+
+
+- name: (configurate) | mkdir /var/run/hadoop
+  file:
+    path: /var/run/hadoop
+    state: directory
+    owner: hduser
+    group: hduser
+    mode: 0644
+
+
+- name: (configurate) | replace hadoop configurations
+  template:
+    src: "config/{{item}}.j2"
+    dest: "/usr/local/hadoop/etc/hadoop/{{item}}"
+  with_items:
+    - core-site.xml
+    - hdfs-site.xml
+    - mapred-site.xml
+    - yarn-site.xml
+    - slaves
+
+
+- name: (configurate) | copy systemd services
+  template:
+    src: "systemd/{{item}}.j2"
+    dest: "/lib/systemd/system/{{item}}"
+  with_items:
+    - hadoop-dfs.service
+    - hadoop-yarn.service
+    - hadoop-jobhistory.service
+
+
+- name: (configurate) | systemd daemon-reload
+  shell: systemctl daemon-reload
+
+
+- name: (configurate) | start hadoop services
+  service:
+    name: "{{item}}"
+    state: started
+  with_items:
+    - hadoop-dfs.service
+    - hadoop-yarn.service
+    - hadoop-jobhistory.service
+
+
+# ./hadoop-2.8.2/bin/hadoop jar hadoop-2.8.2/share/hadoop/tools/lib/hadoop-streaming-2.8.2.jar -file /home/vagrant/mapper.py -mapper /home/vagrant/mapper.py -file /home/vagrant/reducer.py -reducer /home/vagrant/reducer.py -input /hduser/willyhu/novels -output /hduser/willyhu/novels-output
+
+# ./hadoop-2.8.2/bin/hdfs dfs -ls /hduser/willyhu/novels-output
+
+# ./hadoop-2.8.2/bin/hdfs dfs -cat /hduser/willyhu/novels-output/part-00000

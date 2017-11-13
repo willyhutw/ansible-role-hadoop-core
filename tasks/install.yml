@@ -1,0 +1,73 @@
+---
+
+- name: (install) | check openjdk
+  shell: dpkg -l | grep openjdk
+  register: openjdk_installed
+  ignore_errors: yes
+  when: ansible_os_family == "Debian"
+
+
+- name: (install) | add openjdk PPA
+  apt_repository:
+    repo: 'ppa:openjdk-r/ppa'
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_distribution == "Ubuntu"
+    - ansible_distribution_major_version == "14"
+    - openjdk_installed.rc != 0
+
+
+- name: (install) | install openjdk
+  apt:
+    name: openjdk-8-jre
+    state: present
+    update_cache: yes
+  when:
+    - ansible_os_family == "Debian"
+    - openjdk_installed.rc != 0
+
+
+- name: (install) | check openjdk
+  shell: rpm -qa | grep openjdk
+  register: openjdk_installed
+  ignore_errors: yes
+  when: ansible_os_family == "RedHat"
+
+
+- name: (install) | install openjdk
+  yum:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - java-1.8.0-openjdk.x86_64
+  when:
+   - ansible_os_family == "RedHat"
+   - openjdk_installed.rc != 0
+
+
+- name: (install) | remove hadoop-core directory
+  file:
+    path: /usr/local/hadoop
+    state: absent
+
+
+- name: (install) | download hadoop-core package
+  get_url:
+    url: http://apache.stu.edu.tw/hadoop/common/hadoop-2.8.2/hadoop-2.8.2.tar.gz
+    dest: /tmp
+    mode: 0755
+
+
+- name: (install) | extract hadoop-core package into /usr/local/hadoop
+  shell: tar -zxvf /tmp/hadoop-2.8.2.tar.gz -C /usr/local
+
+
+- name: (install) | extract hadoop-core package into /usr/local/hadoop
+  shell: mv /usr/local/hadoop-2.8.2 /usr/local/hadoop
+
+
+- name: (install) | remove package in /tmp
+  file:
+    path: /tmp/hadoop-2.8.2.tar.gz
+    state: absent
+
