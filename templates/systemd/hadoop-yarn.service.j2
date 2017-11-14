@@ -5,12 +5,12 @@ After=network.target
 [Service]
 User={{hadoop_user}}
 Group={{hadoop_user}}
-Type=simple
+Type=oneshot
 Environment=JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+Environment=HADOOP_HOME=/usr/local/hadoop
 ExecStart=/usr/local/hadoop/sbin/start-yarn.sh
 ExecStop=/usr/local/hadoop/sbin/stop-yarn.sh
-PIDFile=/var/run/hadoop/hadoop-yarn.pid
-Restart=on-failure
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
