@@ -13,13 +13,12 @@ Ansible 2.1
 ```hadoop_user```|hduser|hadoop user account.
 ```java_home```|/usr/lib/jvm/java-8-openjdk-amd64|java home.
 ```hadoop_home```|/usr/local/hadoop|hadoop home.
-```fs_defaultFS_address```|127.0.0.1|hdfs address.
-```fs_defaultFS_port```|9000|hdfs port.
+```fs_defaultFS```|127.0.0.1|hdfs address.
 ```dfs_secondary_http_address```|127.0.0.1|secondary namenode address.
-```dfs_secondary_http_port```|50090|secondary namenode port.
 ```mapreduce_framework_name```|yarn|mapreduce framework name.
 ```yarn_resourcemanager_hostname```|127.0.0.1| yarn resourcemanager hostname.
 ```yarn_nodemanager_aux_services```|mapreduce_shuffle| yarn nodemanager aux services.
+```hadoop_master```|127.0.0.1|hadoop master (name node) address.
 ```hadoop_slaves```|['127.0.0.1']|hadoop slave address list.
 
 ## Example
@@ -40,9 +39,10 @@ ansible-galaxy install -r requirements.yml -p ./roles
 ### run it!
 ansible-playbook -i '192.168.33.151, 192.168.33.152, 192.168.33.153,' playbook.yml \
 -e "ansible_ssh_user=vagrant ansible_ssh_pass=vagrant" \
--e "fs_defaultFS_address=192.168.33.151" \
+-e "fs_defaultFS=192.168.33.151" \
 -e "dfs_secondary_http_address=192.168.33.152" \
 -e "yarn_resourcemanager_hostname=192.168.33.151" \
+-e "hadoop_master=192.168.33.151" \
 -e "{'hadoop_slaves':['192.168.33.152','192.168.33.153']}"
 ```
 

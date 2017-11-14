@@ -1,5 +1,12 @@
 ---
 
+
+- name: (configurate) | replace etc/hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+
+
 - name: (configurate) | set environments
   lineinfile:
     path: /etc/environment
@@ -20,35 +27,50 @@
   become_user: hduser
   shell: cat ~/.ssh/id_rsa.pub
   register: ssh_keys
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | set namenode ssh_key to local facts
   set_fact:
     namenode_ssh_key: "{{ssh_keys.stdout}}"
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | deploy keys on all slave servers
   authorized_key:
     user: "{{hadoop_user}}"
-    key: "{{hostvars[fs_defaultFS_address]['namenode_ssh_key']}}"
+    key: "{{hostvars[fs_defaultFS]['namenode_ssh_key']}}"
 
 
 - name: (configurate) | clear namenode known_hosts
   become_user: hduser
   shell: echo "" > ~/.ssh/known_hosts
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
-- name: (configurate) | add slaves to namenode known_hosts
+- name: (configurate) | add master to namenode known_hosts
   become_user: hduser
   shell: ssh-keyscan {{item}} >> ~/.ssh/known_hosts
   with_items:
     - 127.0.0.1
-    - "{{fs_defaultFS_address}}"
-    - "{{hadoop_slaves}}"
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+    - localhost
+    - "{{hadoop_master}}"
+    - "{{hostvars[hadoop_master]['ansible_hostname']}}"
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+
+
+- name: (configurate) | add slaves hostname to namenode known_hosts
+  become_user: hduser
+  shell: ssh-keyscan {{hostvars[item]['ansible_hostname']}} >> ~/.ssh/known_hosts
+  with_items: "{{hadoop_slaves}}"
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+
+
+- name: (configurate) | add slaves ip to namenode known_hosts
+  become_user: hduser
+  shell: ssh-keyscan {{item}} >> ~/.ssh/known_hosts
+  with_items: "{{hadoop_slaves}}"
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | chown to hduser
@@ -84,18 +106,18 @@
     - hadoop-dfs.service
     - hadoop-yarn.service
     - hadoop-jobhistory.service
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | systemd daemon-reload
   shell: systemctl daemon-reload
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | dfs namenode format
   become_user: hduser
   shell: /usr/local/hadoop/bin/hdfs namenode -format
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | start hadoop services
@@ -109,7 +131,7 @@
     - hadoop-dfs.service
     - hadoop-yarn.service
     - hadoop-jobhistory.service
-  when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 # ./hadoop-2.8.2/bin/hadoop jar hadoop-2.8.2/share/hadoop/tools/lib/hadoop-streaming-2.8.2.jar -file /home/vagrant/mapper.py -mapper /home/vagrant/mapper.py -file /home/vagrant/reducer.py -reducer /home/vagrant/reducer.py -input /hduser/willyhu/novels -output /hduser/willyhu/novels-output

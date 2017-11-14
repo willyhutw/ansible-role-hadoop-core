@@ -53,21 +53,21 @@
 
 - name: (install) | download hadoop-core package
   get_url:
-    url: http://apache.stu.edu.tw/hadoop/common/hadoop-2.8.2/hadoop-2.8.2.tar.gz
+    url: http://apache.stu.edu.tw/hadoop/common/hadoop-{{hadoop_version}}/hadoop-{{hadoop_version}}.tar.gz 
     dest: /tmp
     mode: 0755
 
 
 - name: (install) | extract hadoop-core package into /usr/local/hadoop
-  shell: tar -zxvf /tmp/hadoop-2.8.2.tar.gz -C /usr/local
+  shell: tar -zxvf /tmp/hadoop-{{hadoop_version}}.tar.gz -C /usr/local
 
 
 - name: (install) | extract hadoop-core package into /usr/local/hadoop
-  shell: mv /usr/local/hadoop-2.8.2 /usr/local/hadoop
+  shell: mv /usr/local/hadoop-{{hadoop_version}} /usr/local/hadoop
 
 
 - name: (install) | remove package in /tmp
   file:
-    path: /tmp/hadoop-2.8.2.tar.gz
+    path: /tmp/hadoop-{{hadoop_version}}.tar.gz
     state: absent
 

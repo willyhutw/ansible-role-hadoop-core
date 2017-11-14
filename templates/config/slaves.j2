@@ -1,4 +1,4 @@
 {% for i in hadoop_slaves %}
-{{i}}
+{{hostvars[i]['ansible_hostname']}}
 {% endfor %}
 
