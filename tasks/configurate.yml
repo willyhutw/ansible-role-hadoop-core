@@ -36,13 +36,14 @@
 
 
 - name: (configurate) | clear namenode known_hosts
-  shell: echo "" > .ssh/known_hosts
+  become_user: hduser
+  shell: echo "" > ~/.ssh/known_hosts
   when: fs_defaultFS_address in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | add slaves to namenode known_hosts
   become_user: hduser
-  shell: ssh-keyscan {{item}} >> .ssh/known_hosts
+  shell: ssh-keyscan {{item}} >> ~/.ssh/known_hosts
   with_items:
     - 127.0.0.1
     - "{{fs_defaultFS_address}}"
