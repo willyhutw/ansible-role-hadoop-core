@@ -41,6 +41,7 @@
 
 
 - name: (configurate) | add slaves to namenode known_hosts
+  become_user: hduser
   shell: ssh-keyscan {{item}} >> .ssh/known_hosts
   with_items:
     - 127.0.0.1
