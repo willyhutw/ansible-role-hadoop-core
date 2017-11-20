@@ -1,0 +1,13 @@
+[Unit]
+Description=hadoop mr jobhistory service
+After=network.target
+
+[Service]
+User={{hadoop_user}}
+Group={{hadoop_user}}
+Type=forking
+ExecStart=/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh --config {{hadoop_conf_dir}} start historyserver
+ExecStop=/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh --config {{hadoop_conf_dir}} stop historyserver
+
+[Install]
+WantedBy=multi-user.target

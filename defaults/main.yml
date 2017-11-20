@@ -1,18 +1,28 @@
 hadoop_version: 2.7.4
 hadoop_user: hduser
 
+# templates/config/hadoop-env.sh.j2
 java_home: /usr/lib/jvm/java-8-openjdk-amd64
 hadoop_home: /usr/local/hadoop
+hadoop_conf_dir: /etc/hadoop
+hadoop_log_dir: /var/log/hadoop
+hadoop_pid_dir: /var/run/hadoop
 
-fs_defaultFS: 127.0.0.1:9000
+# templates/config/core-site.xml.j2
+hadoop_namenode: 127.0.0.1
+hadoop_namenode_port: 8020
 
-dfs_secondary_http_address: 127.0.0.1:50090
+# templates/config/hdfs-site.xml.j2
+hadoop_secondarynamenode: 127.0.0.1
+hadoop_secondarynamenode_port: 50090
 
+# templates/config/mapred-site.xml.j2
 mapreduce_framework_name: yarn
-yarn_resourcemanager_hostname: 127.0.0.1
-yarn_nodemanager_aux_services: mapreduce_shuffle
 
-hadoop_master: 127.0.0.1
+# templates/config/yarn-site.xml.j2
+yarn_resourcemanager_hostname: 127.0.0.1
+
+# templates/config/slaves.j2
 hadoop_slaves:
  - 127.0.0.1
- 
+

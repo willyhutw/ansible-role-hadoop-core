@@ -17,8 +17,20 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-  <property> 
+  <property>
     <name>dfs.secondary.http.address</name>
-    <value>{{dfs_secondary_http_address}}</value>
+    <value>{{hadoop_secondarynamenode}}:{{hadoop_secondarynamenode_port}}</value>
+  </property>
+  <property> 
+    <name>dfs.namenode.name.dir</name>
+    <value>file://{{hadoop_home}}/var/dfs/nn</value>
+  </property>
+  <property> 
+    <name>dfs.datanode.data.dir</name>
+    <value>file://{{hadoop_home}}/var/dfs/dn</value>
+  </property>
+  <property>
+    <name>dfs.webhdfs.enabled</name>
+    <value>true</value>
   </property>
 </configuration>

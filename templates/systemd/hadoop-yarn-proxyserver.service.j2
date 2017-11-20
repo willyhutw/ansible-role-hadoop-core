@@ -1,0 +1,13 @@
+[Unit]
+Description=hadoop yarn proxyserver service
+After=network.target
+
+[Service]
+User={{hadoop_user}}
+Group={{hadoop_user}}
+Type=forking
+ExecStart=/usr/local/hadoop/sbin/yarn-daemon.sh --config {{hadoop_conf_dir}} start proxyserver
+ExecStop=/usr/local/hadoop/sbin/yarn-daemon.sh --config {{hadoop_conf_dir}} stop proxyserver
+
+[Install]
+WantedBy=multi-user.target

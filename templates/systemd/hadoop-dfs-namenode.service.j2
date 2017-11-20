@@ -1,0 +1,13 @@
+[Unit]
+Description=hadoop dfs namenode service
+After=network.target
+
+[Service]
+User={{hadoop_user}}
+Group={{hadoop_user}}
+Type=forking
+ExecStart=/usr/local/hadoop/sbin/hadoop-daemon.sh --config {{hadoop_conf_dir}} --script hdfs start namenode
+ExecStop=/usr/local/hadoop/sbin/hadoop-daemon.sh --config {{hadoop_conf_dir}} --script hdfs stop namenode
+
+[Install]
+WantedBy=multi-user.target

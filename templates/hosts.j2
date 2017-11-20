@@ -1,5 +1,4 @@
 127.0.0.1 localhost
-{{hadoop_master}} {{hostvars[hadoop_master]['ansible_hostname']}}
 {% for i in hadoop_slaves %}
 {{i}} {{hostvars[i]['ansible_hostname']}}
 {% endfor %}

@@ -45,10 +45,48 @@
    - openjdk_installed.rc != 0
 
 
+- name: (install) | stop namenode services if running
+  service:
+    name: "{{item}}"
+    state: stopped
+  with_items:
+    - hadoop-dfs-namenode.service
+    - hadoop-yarn-resourcemanager.service
+    - hadoop-yarn-proxyserver.service
+    - hadoop-mr-jobhistory.service
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  ignore_errors: yes
+
+
+- name: (install) | stop secondarynamenode services if running
+  service:
+    name: "{{item}}"
+    state: stopped
+  with_items:
+    - hadoop-dfs-secondarynamenode.service
+  when: hadoop_secondarynamenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  ignore_errors: yes
+
+
+- name: (install) | stop datanode services if running
+  service:
+    name: "{{item}}"
+    state: stopped
+  with_items:
+    - hadoop-dfs-datanode.service
+    - hadoop-yarn-nodemanager.service
+  ignore_errors: yes
+
+
 - name: (install) | remove hadoop-core directory
   file:
     path: /usr/local/hadoop
     state: absent
+  with_items:
+    - /etc/hadoop
+    - /var/log/hadoop
+    - /var/run/hadoop
+    - /usr/local/hadoop
 
 
 - name: (install) | download hadoop-core package

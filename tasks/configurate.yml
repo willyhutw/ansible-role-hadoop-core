@@ -1,6 +1,5 @@
 ---
 
-
 - name: (configurate) | replace etc/hosts file
   template:
     src: hosts.j2
@@ -24,114 +23,163 @@
 
 
 - name: (configurate) | fetch namenode public ssh keys
-  become_user: hduser
+  become_user: "{{hadoop_user}}"
   shell: cat ~/.ssh/id_rsa.pub
   register: ssh_keys
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | set namenode ssh_key to local facts
   set_fact:
     namenode_ssh_key: "{{ssh_keys.stdout}}"
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | deploy keys on all slave servers
   authorized_key:
     user: "{{hadoop_user}}"
-    key: "{{hostvars[fs_defaultFS]['namenode_ssh_key']}}"
+    key: "{{hostvars[hadoop_namenode]['namenode_ssh_key']}}"
 
 
 - name: (configurate) | clear namenode known_hosts
-  become_user: hduser
+  become_user: "{{hadoop_user}}"
   shell: echo "" > ~/.ssh/known_hosts
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
-- name: (configurate) | add master to namenode known_hosts
-  become_user: hduser
+- name: (configurate) | add localhost to namenode known_hosts
+  become_user: "{{hadoop_user}}"
   shell: ssh-keyscan {{item}} >> ~/.ssh/known_hosts
   with_items:
     - 127.0.0.1
     - localhost
-    - "{{hadoop_master}}"
-    - "{{hostvars[hadoop_master]['ansible_hostname']}}"
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | add slaves hostname to namenode known_hosts
-  become_user: hduser
+  become_user: "{{hadoop_user}}"
   shell: ssh-keyscan {{hostvars[item]['ansible_hostname']}} >> ~/.ssh/known_hosts
   with_items: "{{hadoop_slaves}}"
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | add slaves ip to namenode known_hosts
-  become_user: hduser
+  become_user: "{{hadoop_user}}"
   shell: ssh-keyscan {{item}} >> ~/.ssh/known_hosts
   with_items: "{{hadoop_slaves}}"
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | chown to hduser
-  shell: chown -R hduser:hduser /usr/local/hadoop
+  shell: chown -R {{hadoop_user}}:{{hadoop_user}} /usr/local/hadoop
 
 
 - name: (configurate) | mkdir /var/run/hadoop
   file:
-    path: /var/run/hadoop
+    path: "{{item}}"
     state: directory
-    owner: hduser
-    group: hduser
-    mode: 0644
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_user}}"
+    mode: 0755
+  with_items:
+    - /etc/hadoop
+    - /var/log/hadoop
+    - /var/run/hadoop
+    - /usr/local/hadoop/var/dfs/nn
+    - /usr/local/hadoop/var/dfs/dn
+
+
+- name: (configurate) | copy config directory to /etc/hadoop
+  become_user: "{{hadoop_user}}"
+  shell: cp -f /usr/local/hadoop/etc/hadoop/* /etc/hadoop/
 
 
 - name: (configurate) | replace hadoop configurations
   template:
     src: "config/{{item}}.j2"
-    dest: "/usr/local/hadoop/etc/hadoop/{{item}}"
+    dest: "/etc/hadoop/{{item}}"
+    owner: "{{hadoop_user}}"
+    group: "{{hadoop_user}}"
   with_items:
+    - hadoop-env.sh
     - core-site.xml
     - hdfs-site.xml
+    - mapred-env.sh
     - mapred-site.xml
+    - yarn-env.sh
     - yarn-site.xml
     - slaves
 
 
-- name: (configurate) | copy systemd services
+- name: (configurate) | copy namenode services
   template:
     src: "systemd/{{item}}.j2"
     dest: "/lib/systemd/system/{{item}}"
   with_items:
-    - hadoop-dfs.service
-    - hadoop-yarn.service
-    - hadoop-jobhistory.service
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+    - hadoop-dfs-namenode.service
+    - hadoop-yarn-resourcemanager.service
+    - hadoop-yarn-proxyserver.service
+    - hadoop-mr-jobhistory.service
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+
+
+- name: (configurate) | copy secondarynamenode services
+  template:
+    src: "systemd/{{item}}.j2"
+    dest: "/lib/systemd/system/{{item}}"
+  with_items:
+    - hadoop-dfs-secondarynamenode.service
+  when: hadoop_secondarynamenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+
+
+- name: (configurate) | copy datanode services
+  template:
+    src: "systemd/{{item}}.j2"
+    dest: "/lib/systemd/system/{{item}}"
+  with_items:
+    - hadoop-dfs-datanode.service
+    - hadoop-yarn-nodemanager.service
 
 
 - name: (configurate) | systemd daemon-reload
   shell: systemctl daemon-reload
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
 - name: (configurate) | dfs namenode format
-  become_user: hduser
-  shell: /usr/local/hadoop/bin/hdfs namenode -format
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+  become_user: "{{hadoop_user}}"
+  shell: yes 'Y' | /usr/local/hadoop/bin/hdfs --config {{hadoop_conf_dir}} namenode -format
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
-- name: (configurate) | start hadoop services
+- name: (configurate) | start namenode services
   service:
     name: "{{item}}"
     state: started
-  environment:
-   JAVA_HOME: "{{java_home}}"
-   HADOOP_HOME: "{{hadoop_home}}"
   with_items:
-    - hadoop-dfs.service
-    - hadoop-yarn.service
-    - hadoop-jobhistory.service
-  when: fs_defaultFS in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+    - hadoop-dfs-namenode.service
+    - hadoop-yarn-resourcemanager.service
+    - hadoop-yarn-proxyserver.service
+    - hadoop-mr-jobhistory.service
+  when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+
+
+- name: (configurate) | start secondarynamenode services
+  service:
+    name: "{{item}}"
+    state: started
+  with_items:
+    - hadoop-dfs-secondarynamenode.service
+  when: hadoop_secondarynamenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
+
+
+- name: (configurate) | start datanode services
+  service:
+    name: "{{item}}"
+    state: started
+  with_items:
+    - hadoop-dfs-datanode.service
+    - hadoop-yarn-nodemanager.service
 
 
 # ./hadoop-2.8.2/bin/hadoop jar hadoop-2.8.2/share/hadoop/tools/lib/hadoop-streaming-2.8.2.jar -file /home/vagrant/mapper.py -mapper /home/vagrant/mapper.py -file /home/vagrant/reducer.py -reducer /home/vagrant/reducer.py -input /hduser/willyhu/novels -output /hduser/willyhu/novels-output
