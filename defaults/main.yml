@@ -1,5 +1,6 @@
 hadoop_version: 2.7.4
-hadoop_user: hduser
+hadoop_user: hdfs
+hadoop_group: hadoop
 
 # templates/config/hadoop-env.sh.j2
 java_home: /usr/lib/jvm/java-8-openjdk-amd64

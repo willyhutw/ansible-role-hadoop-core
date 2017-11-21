@@ -6,10 +6,17 @@
     dest: /etc/hosts
 
 
+- name: (configurate) | add hadoop group
+  group:
+    name: hadoop
+    state: present
+
+
 - name: (configurate) | add hadoop user
   user:
     name: "{{hadoop_user}}"
     state: present
+    groups: hadoop
     generate_ssh_key: yes
 
 
@@ -61,8 +68,12 @@
   when: hadoop_namenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
 
 
-- name: (configurate) | chown to hduser
-  shell: chown -R {{hadoop_user}}:{{hadoop_user}} /usr/local/hadoop
+- name: (configurate) | chown to hadoop user and group
+  shell: chown -R {{hadoop_user}}:{{hadoop_group}} /usr/local/hadoop
+
+
+- name: (configurate) | chmod to hadoop home
+  shell: chmod -R 770 /usr/local/hadoop
 
 
 - name: (configurate) | mkdir /var/run/hadoop
@@ -70,8 +81,8 @@
     path: "{{item}}"
     state: directory
     owner: "{{hadoop_user}}"
-    group: "{{hadoop_user}}"
-    mode: 0755
+    group: "{{hadoop_group}}"
+    mode: 0770
   with_items:
     - /etc/hadoop
     - /var/log/hadoop
@@ -90,7 +101,7 @@
     src: "config/{{item}}.j2"
     dest: "/etc/hadoop/{{item}}"
     owner: "{{hadoop_user}}"
-    group: "{{hadoop_user}}"
+    group: "{{hadoop_group}}"
   with_items:
     - hadoop-env.sh
     - core-site.xml

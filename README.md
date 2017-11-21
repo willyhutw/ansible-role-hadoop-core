@@ -11,7 +11,8 @@ Ansible 2.1
 |Variable|Default Value|Description|
 |---|---|---|
 ```hadoop_version```|2.7.4|hadoop-core version.
-```hadoop_user```|hduser|hadoop user account.
+```hadoop_user```|hdfs|hadoop user account.
+```hadoop_user```|hadoop|hadoop group.
 ```java_home```|/usr/lib/jvm/java-8-openjdk-amd64|java home environment variable
 ```hadoop_home```|/usr/local/hadoop|hadoop home environment variable.
 ```hadoop_conf_dir```|/etc/hadoop|hadoop conf path environment variable.
