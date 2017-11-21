@@ -1,6 +1,6 @@
 # Ansible Hadoop Core
 
-This is a Ansible role to install Apache Hadoop Core (only support ubuntu16 for now.)
+This is a Ansible role to install Apache Hadoop Core (support ubuntu16.04/centos7)
 
 ## Requirements
 
