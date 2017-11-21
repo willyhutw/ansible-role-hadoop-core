@@ -93,7 +93,7 @@
   get_url:
     url: http://apache.stu.edu.tw/hadoop/common/hadoop-{{hadoop_version}}/hadoop-{{hadoop_version}}.tar.gz 
     dest: /tmp
-    mode: 0755
+    mode: 0644
 
 
 - name: (install) | extract hadoop-core package into /usr/local/hadoop
