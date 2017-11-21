@@ -6,15 +6,6 @@
     dest: /etc/hosts
 
 
-- name: (configurate) | set environments
-  lineinfile:
-    path: /etc/environment
-    line: "{{item}}"
-  with_items:
-    - "JAVA_HOME={{java_home}}"
-    - "HADOOP_HOME={{hadoop_home}}"
-
-
 - name: (configurate) | add hadoop user
   user:
     name: "{{hadoop_user}}"
