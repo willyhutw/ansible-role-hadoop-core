@@ -167,6 +167,7 @@
   service:
     name: "{{item}}"
     state: started
+    enabled: yes
   with_items:
     - hadoop-dfs-namenode.service
     - hadoop-yarn-resourcemanager.service
@@ -179,6 +180,7 @@
   service:
     name: "{{item}}"
     state: started
+    enabled: yes
   with_items:
     - hadoop-dfs-secondarynamenode.service
   when: hadoop_secondarynamenode in hostvars[inventory_hostname]['ansible_all_ipv4_addresses']
@@ -188,6 +190,7 @@
   service:
     name: "{{item}}"
     state: started
+    enabled: yes
   with_items:
     - hadoop-dfs-datanode.service
     - hadoop-yarn-nodemanager.service
